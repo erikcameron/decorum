@@ -2,6 +2,7 @@
 
 Decorum implements lightweight decorators for Ruby, called "tasteful decorators." (See below.)
 It is very small, possibly very fast, and has no requirements outside of the standard library.
+Use it wherever.
 
 ## Quick Start
 ```ruby
@@ -18,9 +19,9 @@ class Confetti < Decorum::Decorator
 end
 
 bp = BirthdayParty.new
-bp.respond_to?(:shoot_confetti) <== false
+bp.respond_to?(:shoot_confetti) # ==> false
 bp.decorate(Confetti)
-bp.shoot_confetti <== "boom, yay"
+bp.shoot_confetti # ==> "boom, yay"
 ```
 
 ## Rationale
@@ -75,7 +76,7 @@ In Decorum, objects use decorator classes (descendents of Decorum::Decorator) to
 ```ruby
 if latest_winners.include?(@user.id)
   @user.decorate(FreeVacationCruiseDecorator, because: "You are teh awesome!")
-  @user.assault_with_flashing_gifs! # <=== that method wasn't there before!
+  @user.assault_with_flashing_gifs! # # ==>= that method wasn't there before!
 end
 ```
 
@@ -140,9 +141,9 @@ class StyledNameDecorator < Decorum::Decorator
 end
 
 r = Royalty.find_by_palace_name(:bob)
-r.respond_to? :styled_name <== false
+r.respond_to? :styled_name # ==> false
 r.decorate StyledNameDecorator
-r.styled_name <== "Duke Baron His Grace Most Potent Sir Percy Arnold Robert \"Bob\" Gorpthwaite, Esq."
+r.styled_name # ==> "Duke Baron His Grace Most Potent Sir Percy Arnold Robert \"Bob\" Gorpthwaite, Esq."
 ```
 
 A decorator that keeps state: (code for these is in Examples)
@@ -156,8 +157,8 @@ c.decorate(MilkDecorator, animal: "soycow")
 c.decorate(SugarDecorator)
 c.add_milk
 c.add_sugar
-c.milk_level  # <== 2
-c.sugar_level # <== 1
+c.milk_level  # # ==> 2
+c.sugar_level # # ==> 1
 ```
 
 Decorators are stackable, and can take an options hash. You
@@ -183,8 +184,8 @@ preempted by options passed to the constructor.
 
 When attributes are declared with `share` (or `accumulator`), they
 are shared among all decorators of that class on a given object:
-if an object has three MilkDecorators, the `#milk_level` method
-literally accesses the same state on all three; same for setters.
+if an object has three MilkDecorators, the `#milk_level`/`#milk_level=` methods
+literally access the same state on all three.
 In addition, you get `#milk_level?` and `#reset_milk_level` to
 perform self-evident functions.
 
@@ -251,10 +252,10 @@ fibber = SomeDecoratableClass.new
   fibber.decorate(FibonacciDecorator)
 end
 # call it
-fibber.fib  <== 927372692193078999176
+fibber.fib  # ==> 927372692193078999176
 # it stores both the return and the sequence in shared state:
-fibber.sequence.length == 100  <== true
-fibber.current  <== 927372692193078999176
+fibber.sequence.length == 100  # ==> true
+fibber.current  # ==> 927372692193078999176
 ```
 
 `#decorated_tail` can be used to produce other results.
@@ -293,7 +294,7 @@ value instead, enabling Chain of Responsibility-looking things like this:
   [ErrorHandler, SuccessHandler].each do |handler|
     @agent.decorate(handler)
   end
-  this_service = find_service_decorator(params) # <== SomeServiceHandler
+  this_service = find_service_decorator(params) # # ==> SomeServiceHandler
   @agent.decorate(this_service)
   @agent.service_request(params)
 
@@ -330,6 +331,7 @@ A few things I can imagine showing up soon:
   e.g., `object.my_namespace.namespaced_method`
 - Thread safety: probably not an issue if you're retooling your Rails helpers,
   but consider a use case like this:
+
 ```ruby
   10.times do
     my_decorator = nil  # scope the name
@@ -339,12 +341,13 @@ A few things I can imagine showing up soon:
     end
   end
 ```
+
 - Easy subclassing of Decorum::DecoratedState
 
 &c. I'm open to suggestion.
  
 ## Contributing
-I wrote most of this super late at night, so that would be terrific:
+I wrote most of this super late at night, so that would be awesome:
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

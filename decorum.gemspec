@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = Decorum::VERSION
   spec.authors       = ["Erik Cameron"]
   spec.email         = ["erik.cameron@gmail.com"]
-  spec.description   = %q{Tasteful decorators for Ruby.}
+  spec.description   = %q{Tasteful decorators for Ruby. Use it wherever.}
   spec.summary       = %q{Decorum implements the Decorator pattern (more or less) in a fairly unobtrusive way.}
   spec.homepage      = ""
   spec.license       = "MIT"
@@ -19,5 +19,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "rspec", "~> 2.14"
   spec.add_development_dependency "rake"
 end
