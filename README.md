@@ -1,7 +1,7 @@
 # Decorum
 
 Decorum implements lightweight decorators for Ruby, called "tasteful decorators." (See below.)
-It is very small, possibly very fast, and has no requirements outside of the standard library.
+It is very small, likey very fast, and has no requirements outside of the standard library.
 Use it wherever.
 
 ## Quick Start
@@ -36,7 +36,7 @@ any kind of Ruby program.
 ### Isn't a Decorator like a Presenter which is like an HTML macro?
 
 In Blogylvania there is considerable disagreement about what these terms entail.
-[In RefineryCMS, for example](http://refinerycms.com/guides/extending-controllers-and-models-with-decorators),
+[For example, in RefineryCMS](http://refinerycms.com/guides/extending-controllers-and-models-with-decorators),
 "decorating" a class means opening it up with a `class_eval`. (In this conception, the decorator isn't even
 an _object_, which is astonishing in Ruby.)
 
@@ -96,10 +96,10 @@ in their attributes. Suppose Bob's family calls him Skippy; with a NameDecorator
 have weird conditions like this:
 
 ```ruby
-work.bob == home.bob
-true
-work.bob.name == home.bob.name
-false
+  work.bob == home.bob
+  true
+  work.bob.name == home.bob.name
+  false
 ```
 
 That may sound academic, but imagine what tracking this bug down might be like.
@@ -118,6 +118,23 @@ Decorators which satisfy the conditions stated earlier plus these two are "taste
 because they stay out of the way. (It's not a comment on other implementations. The name just
 stuck.)
 
+## How it works
+When an object is decorated, Decorum extends its own `#method_missing` and `#respond_to_missing?`
+into the object's eigenclass. If no method is found on the original object, Decorum's
+method_missing will direct the message to the decorator chain, by way of a reference to
+the most recent decorator. 
+
+As in GoF, Decorum decorators wrap another object to which they forward unknown messages.
+In both cases, all decorators other than the first wrap another decorator. 
+Instead of wrapping the original object however, the first decorator in Decorum wraps
+an instance of Decorum::ChainStop. If a method reaches the bottom of the chain, this object
+throws a signal back up the stack to Decorum's `#method_missing`, which then calls `super.` (This is
+a throw/catch, _not_ an exception, which would be significantly slower.)
+Because `super` is called from the object's eigenclass, it will respect class-level (and
+higher) customizations of `#method_missing.`
+
+See the source for more details.
+
 ## Usage
 
 ### Helpers
@@ -132,11 +149,7 @@ end
 
 class StyledNameDecorator < Decorum::Decorator
   def styled_name
-    parts = [:fname, :lname, :array_of_middle_names, :array_of_styles].map do |m|
-      root.send(m)
-    end.flatten
-
-    ProperOrderOfStyles.sort_and_join_this_madness(parts)
+    ProperOrderOfStyles.sort_and_join_this_madness(object)
   end
 end
 
@@ -179,6 +192,16 @@ attribute that is shared across all decorators of the same class on that
 object; this shared state can be used for a number of purposes. Finally,
 `default_attributes` lets you set class-level defaults; these will be
 preempted by options passed to the constructor.
+
+As a side note, you can disable another decorators methods thus:
+
+```ruby
+class MethodDisabler < Decorum::Decorator
+  def method_to_be_disabled(*args)
+    throw :chain_stop, Decorum::ChainStop.new
+  end
+end
+```
 
 ### Shared State
 
@@ -291,15 +314,15 @@ value instead, enabling Chain of Responsibility-looking things like this:
 (sorry, no code in the examples for this one)
 
 ```ruby
-  [ErrorHandler, SuccessHandler].each do |handler|
+  handlers = condition ? [ErrorA, SuccessA] : [ErrorB, SuccessB]
+  handlers.each do |handler|
     @agent.decorate(handler)
   end
-  this_service = find_service_decorator(params) # # ==> SomeServiceHandler
+  this_service = determine_service_decorator(params) # # ==> SomeServiceHandler
   @agent.decorate(this_service)
   @agent.service_request(params)
 
   # meanwhile:
-
   class SomeServiceHandler < Decorum::Decorators
     def service_request
       status = perform_request_on(object)
@@ -325,8 +348,10 @@ feature of this class is that it can be decorated, so you can create objects
 whose interfaces are defined entirely by their decorators, and which will
 return nil by default.
 
-## to-do
+## To-do
 A few things I can imagine showing up soon:
+- As mentioned, there will likely be some option for "immediate" methods, which
+  can override methods of the original object. (But don't use it.)
 - Namespaced decorators, probably showing up as a method on the root object,
   e.g., `object.my_namespace.namespaced_method`
 - Thread safety: probably not an issue if you're retooling your Rails helpers,
