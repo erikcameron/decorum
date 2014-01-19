@@ -296,7 +296,7 @@ are shared among all decorators of that class on a given object:
 if an object has three MilkDecorators, the `#milk_level`/`#milk_level=` methods
 literally access the same state on all three.
 In addition, you get `#milk_level?` and `#reset_milk_level` to
-perform self-eviYou can insert this at whatever point in the dent functions.
+perform self-evident functions.
 
 Access to the shared state is proxied first through the root object,
 and then through an instance of Decorum::DecoratedState, before
