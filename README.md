@@ -29,7 +29,7 @@ bp.shoot_confetti # ==> "boom, yay"
 [Skip to the action](#usage)
 
 Decorum expands on the traditional Decorator concept by satisfying [a few additional 
-contraints](#tasteful_decorators). The constraints are designed to make decorators' role in your 
+contraints](#tasteful-decorators). The constraints are designed to make decorators' role in your 
 overall object structure both clear and safe. More on these points below.
 
 - Object Identity: After you decorate an object, you're still dealing with that same
@@ -41,7 +41,7 @@ the decorated object's public methods. (Though you can instruct it to.) This is 
 
 By adhering to these constraints, decorators tend to do the Right Thing, i.e, integrate into existing
 applications easily, and stay out of the way when they aren't doing your bidding. Hence "[tasteful
-decorators](#tasteful_decorators)." (Not meant to imply others are tacky. The name just stuck.)
+decorators](#tasteful-decorators)." (Not meant to imply others are tacky. The name just stuck.)
 
 In addition, Decorum provides a few helpful features:
 
@@ -87,7 +87,7 @@ Decorators may or may not present.
 Like "traditional" (i.e., [Gang of Four](http://en.wikipedia.org/wiki/Design_Patterns)-style)
 decorator patterns, Decorum is a general purpose, object-oriented tool. Use it wherever.
 
-### <a name="#tasteful_decorators"></a>Tasteful Decorators
+### Tasteful Decorators
 
 #### Object Identity
 
@@ -213,7 +213,7 @@ which would be significantly slower.)
 
 See the source for more details.
 
-## <a name="usage"></a> Usage
+## Usage
 
 First, objects need to be decoratable. You can do this for a whole class,
 by including Decorum::Decorations, or for a single object, by extending it.

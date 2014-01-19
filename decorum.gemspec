@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["erik.cameron@gmail.com"]
   spec.description   = %q{Tasteful decorators for Ruby. Use it wherever.}
   spec.summary       = %q{Decorum implements the Decorator pattern (more or less) in a fairly unobtrusive way.}
-  spec.homepage      = ""
+  spec.homepage      = "http://erikcameron.github.io/"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
