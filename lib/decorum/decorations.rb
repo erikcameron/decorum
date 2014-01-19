@@ -73,12 +73,27 @@ module Decorum
 
       base = @_decorator_chain || Decorum::ChainStop.new
       @_decorator_chain = klass.new(base, self, options)
+
+      if klass.immediate_methods
+        immediate = Module.new do
+          klass.immediate_methods.each do |method_name|
+            define_method(method_name) do |*args, &block|
+              response = catch :chain_stop do
+                @_decorator_chain.send(__method__, *args, &block)
+              end
+              response.is_a?(Decorum::ChainStop) ? super(*args, &block) : response
+            end
+          end
+        end
+        extend immediate
+      end
+
       decorators!
       @_decorator_chain
     end
 
     def remove_from_decorator_chain(decorator)
-      return nil unless decorators.include?(decorator) 
+      return nil unless decorator.is_a?(Decorum::Decorator) && decorators.include?(decorator) 
 
       if decorator == @_decorator_chain
         @_decorator_chain = decorator.next_link

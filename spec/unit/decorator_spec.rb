@@ -15,6 +15,22 @@ describe Decorum::Decorator do
   it 'responds to .accumulator' do
     expect(Decorum::Decorator.respond_to?(:accumulator)).to be_true
   end
+
+  it 'responds to .default_attributes' do
+    expect(Decorum::Decorator.respond_to?(:default_attributes)).to be_true
+  end
+
+  it 'responds to .get_default_attributes' do
+    expect(Decorum::Decorator.respond_to?(:get_default_attributes)).to be_true
+  end
+
+  it 'responds to .immediate' do
+    expect(Decorum::Decorator.respond_to?(:immediate)).to be_true
+  end
+
+  it 'responds to .immediate_methods' do
+    expect(Decorum::Decorator.respond_to?(:immediate_methods)).to be_true
+  end
   
   describe '#decorated_state' do
     it 'defers to the root object' do
@@ -129,7 +145,7 @@ describe Decorum::Decorator do
     end 
   end
 
-  context 'when attributes via declared personally' do
+  context 'when attributes are declared personally' do
     describe '#setter' do
       it 'sets local attribute via initialize' do
         expect(decorator.name).to eq('bob')
@@ -161,6 +177,25 @@ describe Decorum::Decorator do
         decorator.send(:nonexistent_method) 
       end
       expect(response).to be_a(Decorum::ChainStop)
+    end
+  end
+  
+  context 'when methods are declared immediate' do
+    it 'includes them in @immediate_methods' do
+      expect(Decorum::Examples::StrongWilledDecorator.immediate_methods.include?(:method_in_question)).to be_true
+    end
+    
+    it 'respects various forms of declaration' do
+      # i.e.:
+      # - it respects mulitple immediate declarations
+      # - it respects single methods or an array of methods
+      # see Examples::StrongWilledDecorator
+      methods = ["second", "third", "fourth"].map do |pre|
+        "#{pre}_immediate_method".to_sym
+      end
+
+      got_em = methods.map { |m| Decorum::Examples::StrongWilledDecorator.immediate_methods.include?(m) }.inject(:&)
+      expect(got_em).to be_true
     end
   end
 end

@@ -80,6 +80,15 @@ module Decorum
       def get_default_attributes
         @default_attributes || {}
       end
+      
+      # allow Decorator classes to override the decorated object's
+      # public methods (tsk tsk)
+      def immediate(*method_names)
+        @immediate_methods ||= []
+        @immediate_methods += method_names
+      end
+
+      attr_reader :immediate_methods
     end
   end
 end
