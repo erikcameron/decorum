@@ -219,7 +219,7 @@ First, objects need to be decoratable. You can do this for a whole class,
 by including Decorum::Decorations, or for a single object, by extending it.
 (Note: this alone doesn't change the object's method lookup. It just makes
 `#decorate` available on the object. The behavior is only changed when
-`#decorate` is called.) The easiest method is probably including 
+`#decorate` is called.) The easiest way is probably including 
 Decorum::Decorations at whatever point(s) of the class hierarchy you
 feel appropriate.
 
