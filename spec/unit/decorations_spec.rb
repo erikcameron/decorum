@@ -5,7 +5,6 @@ describe Decorum::Decorations do
   let(:deco_class_1) { Decorum::Spec::Decorations::FirstDecorator }
   let(:deco_class_2) { Decorum::Spec::Decorations::SecondDecorator }
   let(:deco_class_3) { Decorum::Spec::Decorations::ThirdDecorator }
-   
 
   context 'as-yet-undecorated' do 
     # assert some basic assumptions

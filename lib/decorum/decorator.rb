@@ -20,6 +20,11 @@ module Decorum
         end
       end
     end
+    
+    # override if you want
+    def post_decorate
+      nil
+    end
 
     # a superhash of shared state between Decorators
     # of the same class

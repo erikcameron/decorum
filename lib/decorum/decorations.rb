@@ -1,9 +1,32 @@
 module Decorum
   module Decorations
     def decorate(klass, options={})
-      extend Decorum::Decorations::Intercept
-      decorator = add_to_decorator_chain(klass, options)
-      yield decorator if block_given?
+      if namespace_method = options.delete(:namespace)
+        namespace = nil
+        if self.respond_to?(namespace_method)
+          namespace = send(namespace_method)
+          unless namespace.is_a?(Decorum::DecoratorNamespace)
+            raise RuntimeError, "#{namespace_method} exists and is not a decorator namespace"
+          end
+          namespace.decorate(klass, options)
+        else
+          namespace = Decorum::DecoratorNamespace.new(self)
+          namespace.decorate(klass, options)
+          instance_variable_set(:"@_decorum_#{namespace_method}", namespace)
+          m = Module.new do
+            define_method(namespace_method) do
+              instance_variable_get(:"@_decorum_#{namespace_method}")
+            end
+          end
+          extend m
+        end
+        yield namespace.decorators.last if block_given?
+      else
+        extend Decorum::Decorations::Intercept
+        decorator = add_to_decorator_chain(klass, options)
+        yield decorator if block_given?
+        decorator.post_decorate
+      end 
       self
     end
 
@@ -16,11 +39,11 @@ module Decorum
       if @_decorators
         return @_decorators
       elsif !@_decorator_chain
-        return []
+        return DecoratorCollection.new
       end
 
       decorator = @_decorator_chain
-      @_decorators = []
+      @_decorators = DecoratorCollection.new
       until decorator.is_a?(Decorum::ChainStop) 
         @_decorators << decorator
         decorator = decorator.next_link
@@ -36,6 +59,11 @@ module Decorum
       else
         @_decorated_state
       end
+    end
+
+    def decorators!
+      @_decorators = nil
+      decorators
     end
  
     module Decorum::Decorations::Intercept
@@ -56,14 +84,14 @@ module Decorum
 
     def add_to_decorator_chain(klass, options)
       unless klass.ancestors.include?(Decorum::Decorator)
-        raise RuntimeError.new("decorator chain needs a Decorator")
+        raise RuntimeError, "decorator chain needs a Decorator"
       end
 
       if options[:decorator_handle]
         current_names = decorators.map { |d| d.decorator_handle.to_sym }.compact
         if current_names.include?(options[:decorator_handle].to_sym)
           # is this a little harsh?
-          raise RuntimeError.new("decorator names must be unique over an object")
+          raise RuntimeError, "decorator names must be unique over an object"
         end
       end
 
@@ -105,11 +133,6 @@ module Decorum
       unless decorators!.map { |d| d.class }.include?(decorator.class)
         @_decorated_state[decorator.class] = nil
       end
-      decorators
-    end
-
-    def decorators!
-      @_decorators = nil
       decorators
     end
   end
