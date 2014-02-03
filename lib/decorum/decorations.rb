@@ -36,10 +36,14 @@ module Decorum
       self
     end
 
+    
+    # returns callable decorators---use this
     def decorators
       _decorators.map { |d| CallableDecorator.new(d) }
     end
 
+    # returns raw decorators---don't use this unless
+    # you know what you're doing
     def _decorators
       if @_decorators
         return @_decorators
@@ -56,6 +60,12 @@ module Decorum
       @_decorators
     end
 
+    # reset the decorator collection
+    def _decorators!
+      @_decorators = nil
+      _decorators
+    end
+
     def decorated_state(klass=nil)
       @_decorated_state ||= {}
 
@@ -64,11 +74,6 @@ module Decorum
       else
         @_decorated_state
       end
-    end
-
-    def _decorators!
-      @_decorators = nil
-      _decorators
     end
  
     module Decorum::Decorations::Intercept
