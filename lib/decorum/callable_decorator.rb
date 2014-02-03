@@ -9,9 +9,9 @@ module Decorum
         @_decorator.send(message, *args, &block)
       end
       if response.is_a?(Decorum::ChainStop)
-        response
-      else
         @_decorator.root.send(message, *args, &block)
+      else
+        response
       end
     end
   end

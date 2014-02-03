@@ -197,5 +197,12 @@ describe Decorum::Decorator do
       got_em = methods.map { |m| Decorum::Examples::StrongWilledDecorator.immediate_methods.include?(m) }.inject(:&)
       expect(got_em).to be_true
     end
+   
+    context 'with no arguments' do
+      it 'immediafies its whole public interface' do
+        deco_class = Decorum::Examples::ImmediateDecorator
+        expect(deco_class.immediate_methods).to eq(deco_class.instance_methods(false))
+      end
+    end
   end
 end

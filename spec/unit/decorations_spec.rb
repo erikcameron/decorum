@@ -53,12 +53,16 @@ describe Decorum::Decorations do
         real_decorated = decorated
         expect(decorated.decorate(deco_class_1)).to be_equal(real_decorated)
       end
+
+      it 'calls #post_decorate' do
+        expect(decorated.decorate(deco_class_1).post_decorated).to eq("decorated")
+      end
       
       it 'yields decorator if block_given?' do
         decorator = nil
         decorated.decorate(deco_class_1) { |dec| decorator = dec }
         actual_decorator = decorated.instance_variable_get(:@_decorator_chain)
-        expect(decorator).to be(actual_decorator)
+        expect(decorator.instance_variable_get(:@_decorator)).to be(actual_decorator)
       end
        
       context 'success' do 
@@ -172,8 +176,8 @@ describe Decorum::Decorations do
         end
 
         it 'refreshes via #decorators!' do
-          decorated.decorators[0].next_link = decorated.decorators[2]
-          decorated.send(:decorators!)
+          decorated._decorators[0].next_link = decorated._decorators[2]
+          decorated.send(:_decorators!)
           expect(decorated.decorators.length).to be(2)
         end
       end
@@ -182,7 +186,7 @@ describe Decorum::Decorations do
         before(:each) do
           @undec = decorated.decorators.detect { |d| d.decorator_handle == "deco-2" }
           # just to make sure...
-          unless @undec.is_a?(Decorum::Decorator)
+          unless @undec.is_a?(Decorum::CallableDecorator)
             raise "broken test---no such decorator deco-2; undec was #{@undec.inspect}"
           end
         end

@@ -42,6 +42,7 @@ module Decorum
       end
       response.is_a?(Decorum::ChainStop) ? current_value : response
     end
+    alias_method :defer, :decorated_tail
 
     # delegate to next_link
     # note that we are not faking #respond_to? because
@@ -87,13 +88,19 @@ module Decorum
       end
       
       # allow Decorator classes to override the decorated object's
-      # public methods (tsk tsk)
+      # public methods; use with no args to declare the entire interface 
       def immediate(*method_names)
-        @immediate_methods ||= []
-        @immediate_methods += method_names
+        if method_names.empty?
+          @all_immediate = true
+        else
+          @immediate_methods ||= []
+          @immediate_methods += method_names
+        end
       end
 
-      attr_reader :immediate_methods
+      def immediate_methods
+        @all_immediate ? instance_methods(false) : (@immediate_methods || [])
+      end
     end
   end
 end

@@ -30,4 +30,14 @@ describe "When overriding original methods with .immediate" do
     base_object.undecorate(base_object.decorators.first)
     expect(base_object.second_immediate_method).to eq("class method_missing")
   end
+
+  it "recurses" do
+    4.times { base_object.decorate(Decorum::Examples::ImmediateDecorator) }
+    expect(base_object.increment_immediately_shared).to eq(4)
+  end
+
+  it "recurses on namespaced decorator" do
+    4.times { base_object.decorate(Decorum::Examples::ImmediateDecorator, namespace: :foo) }
+    expect(base_object.foo.increment_immediately_shared).to eq(4)
+  end
 end
