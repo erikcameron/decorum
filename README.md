@@ -6,6 +6,7 @@ possibly very fast, and has no requirements outside of the standard
 library.  Use it wherever.
 
 ## Quick Start
+
 ```ruby
 gem install decorum
 
@@ -24,6 +25,14 @@ bp.respond_to?(:shoot_confetti) # ==> false
 bp.decorate(Confetti)
 bp.shoot_confetti # ==> "boom, yay"
 ```
+
+## New in 0.3.0
+- Methods may be called directly on decorators
+- Decorator namespaces
+- Set superhash and shared state classes via environment
+- Entire decorator interfaces may be declared `immediate` (see below)
+- #post_decorate callback
+
 ## About
 
 [Skip to the action](#usage)
@@ -47,7 +56,7 @@ In addition, Decorum provides a few helpful features:
 
 - Stackable decorators, with shared state 
 - Recursion, via `#decorated_tail`
-- Intercept/change messages
+- Intercept/change/reroute messages, a la Chain of Reponsibility
 - Build stuff entirely out of decorators
 
 As an example of how this is in use right now, suppose you're interfacing a content
@@ -58,16 +67,17 @@ on the image at runtime, e.g.,:
 
 ```ruby
 image_collection = Application::ImageData.sidebar_images
-# say this returns a hash keyed by identifier:
-# { blah: { url: 'http://blah.foo/', alt: 'The Blah Conglomerate' ... }}
 images = Cms::Images.where(identifier: image_collection.keys)
+# ==> { blah: { url: 'http://blah.foo/', alt: 'The Blah Conglomerate' ... }}
 
 images.each do |img|
   img.decorate(ImageMetaDecorator, image_collection[img.identifier])
 end
 
+# defined in ImageMetaDecorator:
 images[0].url # ==> 'http://blah.foo'
 images[0].alt # ==> 'The Blah Conglomerate'
+images[0].fetch_thumbnail_or_queue_to_create
 ```
 
 ### Isn't a Decorator like a Presenter which is like an HTML macro?
@@ -94,8 +104,8 @@ decorator patterns, Decorum is a general purpose, object-oriented tool. Use it w
 Decorators, as conceived of by GoF, Python, etc., masquerade as the
 objects they decorate by responding to their interface. They are _not_ the
 original objects themselves. This may or may not be a problem, depending
-on how your app is structured. In general though, (I doubt this is news)
-it risks breaking encapsulation. Any code which stores direct references
+on how your code is structured. In general though, (I doubt this is news)
+it risks breaking encapsulation: Any code which stores direct references
 to the original object will have to update them to get the decorated
 behavior.  For example, in a common Rails idiom, in order to do this:
 
@@ -142,14 +152,20 @@ and state stays where it should.
 #### Defers to the original interface
 
 Unless instructed otherwise, Decorum will not override existing methods
-on the decorated object. In practice, this might be useful, (see below
-for how to instruct it otherwise) but from a design standpoint, it
-looks to me like an anti-pattern.  The fact that the method _needs_
-overriding implies the original object doesn't have the relevant state to
-fulfill it. The method is now spread out over two classes, that of the original
-object and that of the decorator. 
+on the decorated object. (See below for how to instruct it otherwise.)
+There are certainly cases where this is useful, and having come across
+one myself since the 0.2.0 release, I've amended my position slightly. But
+not much.
 
-The paradigm cases of decorators don't generally address this, either. Consider three
+I'm suspicious of this practice, as it blurs the line between
+"decorating" an object and straight-up monkey patching it.  The fact that the method
+_needs_ overriding implies the original object doesn't have the relevant
+state to fulfill it. The method is now spread out over two classes,
+that of the original object and that of the decorator. This may be
+unavoidable, or monkey patching may be your intention---in that case,
+by all means. But I don't think it's a pattern to be designed to.
+
+The paradigm cases of decorators don't generally address overriding either. Consider three
 common examples:
 
 - Adding a scrollbar to a window
@@ -163,7 +179,8 @@ but it's by no means an essential use of the pattern. And from a design
 perspective, it's a red flag that concerns are becoming... unseparated.
 (It also risks weird bugs by breaking transparency, i.e., you can have
 cases where `a` and `b` are literally identical, but have different 
-attributes.)
+attributes.) With Decorum, you can implement that entire domain of behavior,
+possibly using a [namespace](#namespaced-decorators).
 
 When an object is decorated, Decorum inserts its own `#method_missing`
 and `#respond_to_missing?` into the object's eigenclass. Decorum's `#method_missing`
@@ -182,17 +199,18 @@ message, `super` is called and lookup proceeds normally.
 
 #### Unloadable decorators
 
-Decorators can be unloaded, if necessary. (The following case illustrates
-this, and the need for callbacks, e.g., `#after_decorate`. Definitely one
-my next priorities.)
+Decorators can be unloaded, if necessary:
 
 ```ruby
 @bob.decorate(IsTheMole)
 @bob.revoke_security_clearances 
-# ideally this would be called automatically by IsTheMole
-# on decoration
 
 class IsTheMole < Decorum::Decorators
+  # callback
+  def post_decorate
+    object.revoke_security_clearances
+  end
+
   def revoke_security_clearances
     clearances = object.decorators.select { |d| d.is_a?(SecurityClearance) }
     clearances.each { |clearance| object.undecorate(clearance) }
@@ -300,10 +318,8 @@ perform self-evident functions.
 
 Access to the shared state is proxied first through the root object,
 and then through an instance of Decorum::DecoratedState, before
-ultimately pointing to an instance of Decorum::SuperHash. (SuperHash
-is used for a few things---see the source. It's
-normally OpenStruct, to limit Decorum's dependencies to the standard
-library, but you can override it; I use Hashr personally.) 
+ultimately pointing to an instance of Decorum::SharedState. This
+class can be set via the environment (see lib/decorum.rb).
 
 In the examples above and below, shared state is mainly used to
 accumulate results, like in `#milk_level`. It can also be used for 
@@ -421,6 +437,39 @@ You can now parameterize your responses based on whatever conditions you like,
 by loading different decorators before the request is serviced. If nobody claims
 the specialized method, your default will be returned instead.
 
+### Calling decorators directly
+
+An object's decorators are available via `#decorators`, or by passing a block to `#decorate`:
+
+```ruby
+@object.decorate(SomeDecorator) { |dec| @this_decorator = dec }
+@object.decorators # <== array of decorators
+
+# start a request in the middle of the decorator chain:
+@the_decorator_im_looking_for = @object.decorators.detect { |d| d.name == "cool decorator, bro" }
+@the_decorator_im_looking_for.some_method
+```
+
+(Note that these methods pass the decorator(s) back wrapped in Decorum::CallableDecorator, 
+which is necessary to call methods on them directly.)
+
+### Namespaced Decorators
+
+As noted above, overriding an objects public methods breaks behavior over two 
+different classes. To package a domain of behavior in a namespace using Decorum:
+
+```ruby
+@request.decorate(MyRouter, namespace: "routes")
+@request.routes.my_route(path: "foo/bar")
+# namespaces pass anything they can't do back to the root
+# object, so they effectively override it:
+@request.routes.defined_on_request_object? # <== true
+```
+
+This way, you don't have to define a `#my_route` stub on the original class for
+undecorated instances, and the public method of the original object is available
+on (and in) the namespace.
+
 ### Overriding existing methods
 
 To give decorator methods preference over an objects existing methods (if you
@@ -441,6 +490,9 @@ x.decorate(StrongWilledDecorator)
 x.method_in_question # <== "overridden"
 ```
 
+If you declare `immediate` with no arguments, the decorators entire public interface
+is used. 
+
 ### Decorators All the Way Down
 
 Decorum includes a class called Decorum::BareParticular, which descends from
@@ -452,10 +504,8 @@ return nil by default.
 
 ## To-do
 A few things I can imagine showing up soon:
-- Probably the most important thing is before/after callbacks for decoration
-  and undecoration.
-- Namespaced decorators, probably showing up as a method on the root object,
-  e.g., `object.my_namespace.namespaced_method`
+- An easy way to alias the main methods (#decorate, #undecorate), as you might
+  want those names for something else.
 - Thread safety: probably not an issue if you're retooling your Rails helpers,
   but consider a case like this:
 
@@ -468,12 +518,11 @@ A few things I can imagine showing up soon:
     end
   end
 ```
-- Easy subclassing of Decorum::DecoratedState, so you can do wacky things with it
 
 &c. I'm open to suggestion.
  
 ## Contributing
-I wrote most of this super late at night, (don't worry, the tests pass) so that would be awesome:
+I wrote most of this super late at night, (don't worry, the tests pass!) so that would be awesome:
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

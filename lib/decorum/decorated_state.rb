@@ -1,7 +1,7 @@
 module Decorum
   class DecoratedState 
     def initialize(options={})
-      @shared_state = Decorum::SuperHash.new(options)
+      @shared_state = Decorum::SharedState.new(options)
     end
 
     # this is one of two areas---the other being

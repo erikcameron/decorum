@@ -1,5 +1,6 @@
 # decorum.rb
-require ENV['DECORUM_SUPERHASH_REQUIRE'] || 'ostruct'
+require 'ostruct'
+
 superhash_class = if class_name = ENV['DECORUM_SUPERHASH_CLASS']
   current = nil
   class_name.split('::').each do |const_name|
@@ -11,10 +12,22 @@ else
   OpenStruct
 end
 
+shared_state_class = if class_name = ENV['DECORUM_SHARED_STATE_CLASS']
+  current = nil
+  class_name.split('::').each do |const_name|
+    modyool  = current || Kernel
+    current  = modyool.const_get(const_name)
+  end
+  current
+else
+  superhash_class
+end
+
 module Decorum
 end
 
-Decorum::SuperHash = superhash_class
+Decorum::SuperHash    = superhash_class
+Decorum::SharedState  = shared_state_class
 
 require_relative 'decorum/version'
 require_relative 'decorum/decorations'
