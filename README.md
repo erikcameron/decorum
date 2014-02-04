@@ -196,7 +196,7 @@ original definition is found.)
 A sizeable amount of the world's total Ruby functionality is implemented
 by overriding `#method_missing`, so decorators shouldn't get in the way.
 Because Decorum intercepts messages in the objects eigenclass, it also
-respects existing overrides. If the decorator chain doesn't claim the
+respects existing class-level overrides. If the decorator chain doesn't claim the
 message, `super` is called and lookup proceeds normally.
 
 #### Unloadable decorators
