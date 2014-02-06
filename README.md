@@ -205,10 +205,10 @@ Decorators can be unloaded, if necessary:
 
 ```ruby
 @bob.decorate(IsTheMole)
-@bob.revoke_security_clearances 
 
-class IsTheMole < Decorum::Decorators
-  # callback
+# meanwhile:
+class IsTheMole < Decorum::Decorator
+  # hook method
   def post_decorate
     object.revoke_security_clearances
   end
@@ -219,6 +219,8 @@ class IsTheMole < Decorum::Decorators
   end
 end
 ```
+This example also shows the use of the `#post_decorate` hook.
+
 
 ### Implementation
 
