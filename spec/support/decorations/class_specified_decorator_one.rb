@@ -8,6 +8,14 @@ module Decorum
           "one"
         end
       end
+
+      class ClassSpecifiedDecoratorTwo < ClassSpecifiedDecoratorOne
+        attr_accessor :passed_option
+        
+        def two 
+          "two"
+        end
+      end
     end
   end
 end
