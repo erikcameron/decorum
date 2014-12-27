@@ -24,9 +24,15 @@ end
 
 bp = BirthdayParty.new
 bp.respond_to?(:shoot_confetti) # ==> false
+bp.is_decorated? # ==> false
 bp.decorate(Confetti)
+bp.is_decorated? # ==> true
 bp.shoot_confetti # ==> "boom, yay"
 ```
+
+## New in 0.4.0
+- Decorators and their attributes may now be specified in class definitions, and loaded with `#load_decorators_from_class`
+- `#is_decorated?`
 
 ## New in 0.3.0
 - Methods may be called directly on decorators
@@ -245,7 +251,7 @@ by including Decorum::Decorations, or for a single object, by extending it.
 Decorum::Decorations at whatever point(s) of the class hierarchy you
 feel appropriate.
 
-### Helpers
+### Using Decorators
 The decorated object is accessible as either `#root` or `#object`. A helper method:
 
 ```ruby
@@ -301,6 +307,31 @@ object; this shared state can be used for a number of purposes. Finally,
 `default_attributes` lets you set class-level defaults; these will be
 preempted by options passed to the constructor.
 
+#### Specifying decorators in classes
+
+Decoration may be performed by the instance method `#decorate` above,
+or you can include default decorators and arguments in your class
+definition:
+
+```ruby
+class Coffee
+  include Decorum::Decorations
+  # two bovine dairy no sugar by default, please:
+  decorators Milk, { animal: "cow" }, Milk, { animal: "cow" }
+  ...
+end
+
+c = Coffee.new
+c.load_decorators_from_class
+c.add_milk
+c.milk_level # ==> 2
+```
+
+Note that this usage does _not_ automatically include decorators on new
+objects. That would require invasive procedures on your object initialization.
+Instead, Decorum provides `#load_decorators_from_class`, which you can call 
+in your initializations, or later.
+
 As a side note, you can disable another decorators methods thus:
 
 ```ruby
@@ -336,7 +367,7 @@ other things:
 
 And so on. 
 
-### `#decorated_tail`
+### #decorated_tail
 
 How exactly did the first MilkDecorator pass `#add_milk`
 down the chain instead of returning? In general, the decision
