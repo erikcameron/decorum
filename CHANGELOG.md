@@ -1,7 +1,7 @@
 # 0.4.0 / 2014-12-26
 
 * [FEATURE] specify default decorators in a class with .decorators
-* [FEATURE] threadsafe shared state (w/ documentation)
+* [FEATURE] #is_decorated?
 
 # 0.3.0 / 2014-2-3
 

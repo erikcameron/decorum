@@ -2,7 +2,7 @@ module Decorum
   module Decorations
     def self.included(modyool)
       # class method to declare default decorators
-      def modyool.decorators(*args, &block)
+      def modyool.decorators(*args)
         # set first-listed priority
         if args[0] == :reverse
           return @_decorum_stack_reverse = true
@@ -10,7 +10,7 @@ module Decorum
 
         @_decorum_stack ||= []
 
-       if !args.empty? || block_given?
+       if !args.empty? 
           args.each do |arg|
             if (arg.is_a?(Class) && arg.ancestors.include?(Decorum::Decorator)) || arg.is_a?(Hash)
               next if arg.is_a?(Hash)
@@ -22,24 +22,14 @@ module Decorum
               raise ArgumentError, "invalid argument to #{self.to_s}.decorate_with: #{arg.to_s}"
             end
           end
-
-          # is this block syntax really necessary? consider removing?
-          if block_given?
-            block.arity == 0 ? instance_eval(&block) : yield(self)
-          end
         else
           @_decorum_stack_reverse ? @_decorum_stack.reverse : @_decorum_stack
         end
       end 
     end
   
-    # instance methods
+    # public instance methods
 
-    # leaving it to you to, say, call this from #initialize
-    def load_decorators_from_class
-      self.class.decorators.each { |decorator_class, options| decorate(decorator_class, options) }
-      self
-    end
 
     def decorate(klass, options={})
       if namespace_method = options.delete(:namespace)
@@ -52,7 +42,7 @@ module Decorum
           end
           namespace.decorate(klass, options) { |d| decorator = d }
         else
-          namespace = Decorum::DecoratorNamespace.new(self)
+          namespace   = Decorum::DecoratorNamespace.new(self)
           namespace.decorate(klass, options) { |d| decorator = d }
           instance_variable_set(:"@_decorum_#{namespace_method}", namespace)
           m = Module.new do
@@ -61,6 +51,7 @@ module Decorum
             end
           end
           extend m
+          _decorator_namespaces << namespace_method
         end
         yield CallableDecorator.new(decorator) if block_given?
       else
@@ -76,11 +67,20 @@ module Decorum
       remove_from_decorator_chain(target)
       self
     end
-
     
+    def is_decorated?
+      ![ decorators, _decorator_namespaces.map { |ns| send(ns).decorators } ].flatten.empty?
+    end
+   
     # returns callable decorators---use this
     def decorators
       _decorators.map { |d| CallableDecorator.new(d) }
+    end
+
+    # leaving it to you to, say, call this from #initialize
+    def load_decorators_from_class
+      self.class.decorators.each { |decorator_class, options| decorate(decorator_class, options) }
+      self
     end
 
     # returns raw decorators---don't use this unless
@@ -116,6 +116,10 @@ module Decorum
         @_decorated_state
       end
     end
+
+    def _decorator_namespaces
+      @_decorator_namespaces ||= []
+    end
  
     module Decorum::Decorations::Intercept
       def method_missing(message, *args, &block)
@@ -131,7 +135,7 @@ module Decorum
       end
     end
 
-    protected
+    private
 
     def add_to_decorator_chain(klass, options)
       unless klass.ancestors.include?(Decorum::Decorator)

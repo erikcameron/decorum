@@ -69,6 +69,12 @@ describe Decorum::Decorations do
       expect(decorated.undecorated_method).to be_true
     end
 
+    describe '#is_decorated?' do
+      it 'is false' do
+        expect(decorated.is_decorated?).to be_false
+      end
+    end
+
     describe '#decorated_state' do
       it 'returns a hash' do
         blank_state = decorated.decorated_state
@@ -120,6 +126,17 @@ describe Decorum::Decorations do
           decorated.decorate(deco_class_1, decorator_options)
         end
 
+        describe '#is_decorated?' do
+          it 'returns true' do
+            expect(decorated.is_decorated?).to be_true
+          end
+          
+          it 'returns false after unloading' do
+            decorated.undecorate(decorated.decorators.first)
+            expect(decorated.is_decorated?).to be_false
+          end
+        end
+            
         it 'installs intercept' do
           expect(decorated.is_a?(Decorum::Decorations::Intercept)).to be_true
         end
