@@ -6,6 +6,55 @@ describe Decorum::Decorations do
   let(:deco_class_2) { Decorum::Spec::Decorations::SecondDecorator }
   let(:deco_class_3) { Decorum::Spec::Decorations::ThirdDecorator }
 
+  context 'loading decorators from class defaults' do
+    let(:klass) do 
+      Class.new do
+        include Decorum::Decorations
+        decorators Decorum::Spec::Decorations::ClassSpecifiedDecoratorOne, { passed_option: "one" },
+          Decorum::Spec::Decorations::ClassSpecifiedDecoratorTwo, { passed_option: "two" }
+      end
+    end
+
+    describe '.decorators' do
+      it 'stores decorators in own state correctly' do
+        expect(klass.decorators.map { |d| d[0].ancestors.include?(Decorum::Decorator) }.inject(:&)).to be_true
+      end
+
+      # the instance method #load_decorators_from_class will insert them in the order given:
+      
+      it 'normally gives first priority to last listed' do
+        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "one" }, { passed_option: "two" }]).to be_true
+      end
+
+      it 'reverses order for first-specfied priority' do
+        klass.decorators :reverse
+        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "two" }, { passed_option: "one" }]).to be_true
+      end
+
+      it 'rejects malformed options' do
+        expect { klass.decorators(Decorum::Spec::Decorations::FirstDecorator, "invalid decorator argument") }.to raise_error
+      end
+
+      # this probably belongs with other instance methods below, but we've got the 
+      # support objects built for it here...
+      describe '#decorators' do 
+        let(:obj) { klass.new.load_decorators_from_class }
+        it 'returns self' do
+          # sort of
+          expect(obj.is_a?(klass)).to be_true
+        end
+
+        it 'loads all decorators given by .decorators' do
+          expect(obj.one == "one" && obj.two == "two").to be_true
+        end
+
+        it 'loads decorators in the order given by .decorators' do
+          expect(obj.passed_option == "two").to be_true
+        end
+      end
+    end
+  end
+
   context 'as-yet-undecorated' do 
     # assert some basic assumptions
     it 'is decoratable' do
@@ -41,7 +90,7 @@ describe Decorum::Decorations do
         expect(decorated.undecorate(:symbol_arg)).to be_equal(decorated)
       end
 
-      it 'returns self on spurious Decorator' do
+      it 'returns self on spurious decorator' do
         expect(decorated.undecorate(deco_class_1)).to be_equal(decorated)
       end
     end
@@ -127,7 +176,7 @@ describe Decorum::Decorations do
 
       context 'failure' do
         it 'rejects classes that are not Decorators' do
-          expect { decorated.decorate(Class,{}) }.to raise_error(RuntimeError)
+          expect { decorated.decorate(Class,{}) }.to raise_error(TypeError)
         end
 
         it 'rejects non unique decorator handles' do

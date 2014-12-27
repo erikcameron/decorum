@@ -1,5 +1,46 @@
 module Decorum
   module Decorations
+    def self.included(modyool)
+      # class method to declare default decorators
+      def modyool.decorators(*args, &block)
+        # set first-listed priority
+        if args[0] == :reverse
+          return @_decorum_stack_reverse = true
+        end
+
+        @_decorum_stack ||= []
+
+       if !args.empty? || block_given?
+          args.each do |arg|
+            if (arg.is_a?(Class) && arg.ancestors.include?(Decorum::Decorator)) || arg.is_a?(Hash)
+              next if arg.is_a?(Hash)
+              klass     = arg
+              next_arg  = args[args.index(arg) + 1]
+              options   = next_arg.is_a?(Hash) ? next_arg : {}
+              @_decorum_stack << [klass, options]
+            else
+              raise ArgumentError, "invalid argument to #{self.to_s}.decorate_with: #{arg.to_s}"
+            end
+          end
+
+          # is this block syntax really necessary? consider removing?
+          if block_given?
+            block.arity == 0 ? instance_eval(&block) : yield(self)
+          end
+        else
+          @_decorum_stack_reverse ? @_decorum_stack.reverse : @_decorum_stack
+        end
+      end 
+    end
+  
+    # instance methods
+
+    # leaving it to you to, say, call this from #initialize
+    def load_decorators_from_class
+      self.class.decorators.each { |decorator_class, options| decorate(decorator_class, options) }
+      self
+    end
+
     def decorate(klass, options={})
       if namespace_method = options.delete(:namespace)
         decorator = nil
@@ -94,7 +135,7 @@ module Decorum
 
     def add_to_decorator_chain(klass, options)
       unless klass.ancestors.include?(Decorum::Decorator)
-        raise RuntimeError, "decorator chain needs a Decorator"
+        raise TypeError, "decorator chain needs a Decorator"
       end
 
       if options[:decorator_handle]
