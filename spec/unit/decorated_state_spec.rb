@@ -24,7 +24,7 @@ describe Decorum::DecoratedState do
 
     describe '#respond_to?' do
       it 'is false for forwarded messages' do
-        expect(ds.respond_to?(:marker)).to be_false
+        expect(ds.respond_to?(:marker)).to be false
       end
     end 
   end

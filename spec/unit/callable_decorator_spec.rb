@@ -16,7 +16,7 @@ describe Decorum::CallableDecorator do
   context "testing assumptions" do
     # just make sure we did this right...
     it "is a Decorator" do
-      expect(decorator.is_a?(Decorum::CallableDecorator)).to be_true
+      expect(decorator.is_a?(Decorum::CallableDecorator)).to be true
     end
   end
 end

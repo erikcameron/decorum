@@ -9,32 +9,32 @@ describe Decorum::Decorator do
   end
 
   it 'responds to .share' do
-    expect(Decorum::Decorator.respond_to?(:share)).to be_true
+    expect(Decorum::Decorator.respond_to?(:share)).to be true
   end
 
   it 'responds to .accumulator' do
-    expect(Decorum::Decorator.respond_to?(:accumulator)).to be_true
+    expect(Decorum::Decorator.respond_to?(:accumulator)).to be true
   end
 
   it 'responds to .default_attributes' do
-    expect(Decorum::Decorator.respond_to?(:default_attributes)).to be_true
+    expect(Decorum::Decorator.respond_to?(:default_attributes)).to be true
   end
 
   it 'responds to .get_default_attributes' do
-    expect(Decorum::Decorator.respond_to?(:get_default_attributes)).to be_true
+    expect(Decorum::Decorator.respond_to?(:get_default_attributes)).to be true
   end
 
   it 'responds to .immediate' do
-    expect(Decorum::Decorator.respond_to?(:immediate)).to be_true
+    expect(Decorum::Decorator.respond_to?(:immediate)).to be true
   end
 
   it 'responds to .immediate_methods' do
-    expect(Decorum::Decorator.respond_to?(:immediate_methods)).to be_true
+    expect(Decorum::Decorator.respond_to?(:immediate_methods)).to be true
   end
   
   describe '#decorated_state' do
     it 'defers to the root object' do
-      expect(decorator.decorated_state.reaching_its_destination?).to be_true  
+      expect(decorator.decorated_state.reaching_its_destination?).to be true  
     end
   end
 
@@ -169,7 +169,7 @@ describe Decorum::Decorator do
   
   context 'when calling decorator methods' do
     it 'picks up methods it has' do
-      expect(decorator.basic_decorator_method).to be_true
+      expect(decorator.basic_decorator_method).to be true
     end
 
     it 'defers methods it doesn\'t have' do
@@ -182,7 +182,7 @@ describe Decorum::Decorator do
   
   context 'when methods are declared immediate' do
     it 'includes them in @immediate_methods' do
-      expect(Decorum::Examples::StrongWilledDecorator.immediate_methods.include?(:method_in_question)).to be_true
+      expect(Decorum::Examples::StrongWilledDecorator.immediate_methods.include?(:method_in_question)).to be true
     end
     
     it 'respects various forms of declaration' do
@@ -195,7 +195,7 @@ describe Decorum::Decorator do
       end
 
       got_em = methods.map { |m| Decorum::Examples::StrongWilledDecorator.immediate_methods.include?(m) }.inject(:&)
-      expect(got_em).to be_true
+      expect(got_em).to be true
     end
    
     context 'with no arguments' do

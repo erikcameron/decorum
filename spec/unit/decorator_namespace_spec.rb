@@ -7,7 +7,7 @@ describe Decorum::DecoratorNamespace do
 
   it "is decoratable" do
     ns = ns_class.new(root)
-    expect(ns.is_a?(Decorum::Decorations)).to be_true
+    expect(ns.is_a?(Decorum::Decorations)).to be true
   end
   
   it "defers to root object on unknown messages" do

@@ -17,18 +17,18 @@ describe Decorum::Decorations do
 
     describe '.decorators' do
       it 'stores decorators in own state correctly' do
-        expect(klass.decorators.map { |d| d[0].ancestors.include?(Decorum::Decorator) }.inject(:&)).to be_true
+        expect(klass.decorators.map { |d| d[0].ancestors.include?(Decorum::Decorator) }.inject(:&)).to be true
       end
 
       # the instance method #load_decorators_from_class will insert them in the order given:
       
       it 'normally gives first priority to last listed' do
-        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "one" }, { passed_option: "two" }]).to be_true
+        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "one" }, { passed_option: "two" }]).to be true
       end
 
       it 'reverses order for first-specfied priority' do
         klass.decorators :reverse
-        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "two" }, { passed_option: "one" }]).to be_true
+        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "two" }, { passed_option: "one" }]).to be true
       end
 
       it 'rejects malformed options' do
@@ -41,15 +41,15 @@ describe Decorum::Decorations do
         let(:obj) { klass.new.load_decorators_from_class }
         it 'returns self' do
           # sort of
-          expect(obj.is_a?(klass)).to be_true
+          expect(obj.is_a?(klass)).to be true
         end
 
         it 'loads all decorators given by .decorators' do
-          expect(obj.one == "one" && obj.two == "two").to be_true
+          expect(obj.one == "one" && obj.two == "two").to be true
         end
 
         it 'loads decorators in the order given by .decorators' do
-          expect(obj.passed_option == "two").to be_true
+          expect(obj.passed_option == "two").to be true
         end
       end
     end
@@ -58,32 +58,32 @@ describe Decorum::Decorations do
   context 'as-yet-undecorated' do 
     # assert some basic assumptions
     it 'is decoratable' do
-      expect(decorated.is_a?(Decorum::Decorations)).to be_true
+      expect(decorated.is_a?(Decorum::Decorations)).to be true
     end
 
     it 'does not respond to first decorator test method' do
-      expect(decorated.respond_to?(:first_decorator_method)).to be_false
+      expect(decorated.respond_to?(:first_decorator_method)).to be false
     end
 
     it 'responds to its own methods' do 
-      expect(decorated.undecorated_method).to be_true
+      expect(decorated.undecorated_method).to be true
     end
 
     describe '#is_decorated?' do
       it 'is false' do
-        expect(decorated.is_decorated?).to be_false
+        expect(decorated.is_decorated?).to be false
       end
     end
 
     describe '#decorated_state' do
       it 'returns a hash' do
         blank_state = decorated.decorated_state
-        expect(blank_state.is_a?(Hash)).to be_true
+        expect(blank_state.is_a?(Hash)).to be true
       end
 
       it 'returns an empty hash' do
         blank_state = decorated.decorated_state
-        expect(blank_state.empty?).to be_true
+        expect(blank_state.empty?).to be true
       end
 
       it 'returns nil given an argument' do
@@ -128,26 +128,26 @@ describe Decorum::Decorations do
 
         describe '#is_decorated?' do
           it 'returns true' do
-            expect(decorated.is_decorated?).to be_true
+            expect(decorated.is_decorated?).to be true
           end
           
           it 'returns false after unloading' do
             decorated.undecorate(decorated.decorators.first)
-            expect(decorated.is_decorated?).to be_false
+            expect(decorated.is_decorated?).to be false
           end
         end
             
         it 'installs intercept' do
-          expect(decorated.is_a?(Decorum::Decorations::Intercept)).to be_true
+          expect(decorated.is_a?(Decorum::Decorations::Intercept)).to be true
         end
 
         it 'sets internal state' do
           internal_state = decorated.instance_variable_get(:@_decorator_chain)
-          expect(internal_state.is_a?(deco_class_1)).to be_true
+          expect(internal_state.is_a?(deco_class_1)).to be true
         end
 
         it 'does not lose its own methods' do
-          expect(decorated.respect_previously_defined_methods?).to be_true
+          expect(decorated.respect_previously_defined_methods?).to be true
         end
         
         it 'gains the methods of the decorator' do
@@ -210,15 +210,15 @@ describe Decorum::Decorations do
       before(:each) { decorated.decorate(deco_class_1) }
 
       it 'returns true for decorated methods' do  
-        expect(decorated.respond_to?(:first_decorator_method)).to be_true
+        expect(decorated.respond_to?(:first_decorator_method)).to be true
       end
 
       it 'returns true for undecorated methods' do
-        expect(decorated.respond_to?(:undecorated_method)).to be_true
+        expect(decorated.respond_to?(:undecorated_method)).to be true
       end
 
       it 'returns false for undefined method' do
-        expect(decorated.respond_to?(:nonexistent_method)).to be_false
+        expect(decorated.respond_to?(:nonexistent_method)).to be false
       end
     end
 
@@ -277,11 +277,11 @@ describe Decorum::Decorations do
           before(:each) { decorated.undecorate(@undec) }
 
           it 'no longer responds to removed decorated method' do
-            expect(decorated.respond_to?(:second_decorator_method)).to be_false
+            expect(decorated.respond_to?(:second_decorator_method)).to be false
           end
 
           it 'still responds to other decorated methods' do 
-            expect(decorated.respond_to?(:third_decorator_method)).to be_true
+            expect(decorated.respond_to?(:third_decorator_method)).to be true
           end
 
           it 'doesn\'t mind if we check one just to be sure' do

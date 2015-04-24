@@ -1,3 +1,6 @@
+# 0.4.1 / 2015-04-24
+* [BUGFIX] updated test suite for new rspec T/F comparison style
+
 # 0.4.0 / 2014-12-26
 
 * [FEATURE] specify default decorators in a class with .decorators
