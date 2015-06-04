@@ -25,7 +25,10 @@ end
 bp = BirthdayParty.new
 bp.respond_to?(:shoot_confetti) # ==> false
 bp.is_decorated? # ==> false
+# but wait!
 bp.decorate(Confetti)
+# and now...
+bp.respond_to?(:shoot_confetti) # ==> true
 bp.is_decorated? # ==> true
 bp.shoot_confetti # ==> "boom, yay"
 ```
@@ -270,6 +273,7 @@ end
 r = Royalty.find_by_palace_name(:bob)
 r.respond_to? :styled_name # ==> false
 r.decorate StyledNameDecorator
+r.respond_to? :styled_name # ==> true
 r.styled_name # ==> "His Grace Most Potent Baron Sir Percy Arnold Robert \"Bob\" Gorpthwaite, Esq."
 ```
 
