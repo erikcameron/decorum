@@ -1,3 +1,6 @@
+# 0.5.0 / 2016-04-03
+* [FEATURE] public methods in Decorations (#decorate, #undecorate, etc.) may now be aliased
+
 # 0.4.1 / 2015-04-24
 * [BUGFIX] updated test suite for new rspec T/F comparison style
 

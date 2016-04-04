@@ -33,6 +33,9 @@ bp.is_decorated? # ==> true
 bp.shoot_confetti # ==> "boom, yay"
 ```
 
+## New in 0.5.0
+- The (public) methods in Decorum::Decorations (decorate, undecorate, etc.) may now be aliased. If you were having weird bugs beacuse Decorum was clobbering some existing method named `#decorate`, this is the version for you. More below.
+
 ## New in 0.4.0
 - Decorators and their attributes may now be specified in class definitions, and loaded with `#load_decorators_from_class`
 - `#is_decorated?`
@@ -248,9 +251,10 @@ See the source for more details.
 
 First, objects need to be decoratable. You can do this for a whole class,
 by including Decorum::Decorations, or for a single object, by extending it.
-(Note: this alone doesn't change the object's method lookup. It just makes
-`#decorate` available on the object. The behavior is only changed when
-`#decorate` is called.) The easiest way is probably including 
+Note: this alone doesn't change the object's method lookup. It just makes
+`#decorate` and friends available on the object. (Note: As of 0.5.0 this
+isn't strictly true. See [Aliasing Decorum Methods](#aliasing-decorum-methods) below.) The behavior is only changed when
+`#decorate` is called. The easiest way is probably including 
 Decorum::Decorations at whatever point(s) of the class hierarchy you
 feel appropriate.
 
@@ -321,7 +325,7 @@ definition:
 class Coffee
   include Decorum::Decorations
   # two bovine dairy no sugar by default, please:
-  decorators Milk, { animal: "cow" }, Milk, { animal: "cow" }
+  decorum Milk, { animal: "cow" }, Milk, { animal: "cow" }
   ...
 end
 
@@ -330,6 +334,12 @@ c.load_decorators_from_class
 c.add_milk
 c.milk_level # ==> 2
 ```
+
+(This class method was called `decorators` in versions prior to 0.5.0,
+but in the interest of avoiding naming conflicts, it's been changed to 
+`decorum`. If however you're using the standard [method aliases](#aliasing-decorum-methods),
+it will install an alias for `decorators`, allowing your existing stuff to 
+keep working without changes.)
 
 Note that this usage does _not_ automatically include decorators on new
 objects. That would require invasive procedures on your object initialization.
@@ -532,6 +542,46 @@ x.method_in_question # <== "overridden"
 If you declare `immediate` with no arguments, the decorators entire public interface
 is used. 
 
+### Aliasing Decorum methods
+
+Including/extending Decorum::Decorations makes a number of public methods (e.g., `#decorate`)
+available on an object, which can be a problem if methods under those names
+already exist. As of 0.5.0, these methods are actually implemented with "internalized"
+names, (e.g., `#_decorum_decorate`) and aliased after the fact. Decorum is loaded by requiring 
+two files: 
+
+```ruby
+# lib/decorum.rb
+require_relative 'decorum/noaliases'
+require_relative 'decorum/aliases'
+```
+
+The `noaliases` file loads up everything except aliasing; after requiring this file,
+public methods in Decorum::Decorations are available by their internal names. Aliases
+are then loaded for each of the public methods, either as specified in upcased environment variables
+(e.g., `_DECORUM_DECORATE="my_decorate_alias"`) or failing that, the default values
+in `aliases`. Here are the public methods and their defaults:
+
+```ruby
+# from lib/decorum/aliases.rb
+    DEFAULT_ALIASES = { _decorum_decorate: "decorate",
+      _decorum_undecorate: "undecorate",
+      _decorum_is_decorated?: "is_decorated?",
+      _decorum_decorators: "decorators",
+      _decorum_decorated_state: "decorated_state",
+      _decorum_load_decorators_from_class: "load_decorators_from_class",
+      _decorum_raw_decorators: nil,
+      _decorum_raw_decorators!: nil,
+      _decorum_namespaces: nil }
+```
+
+The `.decorum` method made available to modules when they include Decorum::Decorations is also
+aliased here as either the value of `_DECORUM_CLASS_DECORATORS` or just `.decorators`.
+
+If you need something else, (e.g., more finely grained aliases) you can just `require decorum/noaliases`,
+and all of Decorum's aliasing will be skipped. You can then implement your own scheme however you like. 
+
+
 ### Decorators All the Way Down
 
 Decorum includes a class called Decorum::BareParticular, which descends from
@@ -543,8 +593,7 @@ return nil by default.
 
 ## To-do
 A few things I can imagine showing up soon:
-- An easy way to alias the main methods (#decorate, #undecorate), as you might
-  want those names for something else.
+- See open issues
 - Thread safety: probably not an issue if you're retooling your Rails helpers,
   but consider a case like this:
 
