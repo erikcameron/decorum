@@ -8,8 +8,8 @@ module Decorum
           true
         end
         
-        def decorated_state(*args)
-          @decorated_state ||= Decorum::Spec::Decorator::DecoratedStateStub.new
+        def _decorum_decorated_state(*args)
+          @_decorum_decorated_state ||= Decorum::Spec::Decorator::DecoratedStateStub.new
         end
       end
     end

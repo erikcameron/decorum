@@ -5,7 +5,7 @@ describe 'a Fibonacci sequence implemented in Decorators' do
 
   before(:each) do
     100.times do
-      fibber.decorate(Decorum::Examples::FibonacciDecorator)
+      fibber._decorum_decorate(Decorum::Examples::FibonacciDecorator)
     end
   end
 

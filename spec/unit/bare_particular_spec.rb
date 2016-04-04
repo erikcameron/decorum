@@ -8,6 +8,6 @@ describe Decorum::BareParticular do
   end
 
   it 'black holes undefined methods' do
-    expect(bp.nonexistent_method).to be_nil
+    expect(bp.this_method_absolutely_doesnt_exist).to be_nil
   end
 end

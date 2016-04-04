@@ -5,9 +5,9 @@ module Decorum
     alias_method :object, :root
 
     def initialize(next_link, root, options)
-      @passed_options = options
-      @next_link = next_link
-      @root = root
+      @passed_options   = options
+      @next_link        = next_link
+      @root             = root
       @decorator_handle = options[:decorator_handle]
 
       defaults = self.class.get_default_attributes
@@ -29,7 +29,7 @@ module Decorum
     # a superhash of shared state between Decorators
     # of the same class
     def decorated_state
-      root.decorated_state(self.class)
+      root._decorum_decorated_state(self.class)
     end
 
     # Decorators that want stackable or cumulative 

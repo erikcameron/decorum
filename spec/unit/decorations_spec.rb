@@ -38,7 +38,7 @@ describe Decorum::Decorations do
       # this probably belongs with other instance methods below, but we've got the 
       # support objects built for it here...
       describe '#decorators' do 
-        let(:obj) { klass.new.load_decorators_from_class }
+        let(:obj) { klass.new._decorum_load_decorators_from_class }
         it 'returns self' do
           # sort of
           expect(obj.is_a?(klass)).to be true
@@ -69,71 +69,71 @@ describe Decorum::Decorations do
       expect(decorated.undecorated_method).to be true
     end
 
-    describe '#is_decorated?' do
+    describe '#_decorum_is_decorated?' do
       it 'is false' do
-        expect(decorated.is_decorated?).to be false
+        expect(decorated._decorum_is_decorated?).to be false
       end
     end
 
-    describe '#decorated_state' do
+    describe '#_decorum_decorated_state' do
       it 'returns a hash' do
-        blank_state = decorated.decorated_state
+        blank_state = decorated._decorum_decorated_state
         expect(blank_state.is_a?(Hash)).to be true
       end
 
       it 'returns an empty hash' do
-        blank_state = decorated.decorated_state
+        blank_state = decorated._decorum_decorated_state
         expect(blank_state.empty?).to be true
       end
 
       it 'returns nil given an argument' do
-        expect(decorated.decorated_state(:not_gonna_work)).to be_nil
+        expect(decorated._decorum_decorated_state(:not_gonna_work)).to be_nil
       end
     end
     
-    describe 'undecorate' do
+    describe '#_decorum_undecorate' do
       it 'returns self on symbol' do
-        expect(decorated.undecorate(:symbol_arg)).to be_equal(decorated)
+        expect(decorated._decorum_undecorate(:symbol_arg)).to be_equal(decorated)
       end
 
       it 'returns self on spurious decorator' do
-        expect(decorated.undecorate(deco_class_1)).to be_equal(decorated)
+        expect(decorated._decorum_undecorate(deco_class_1)).to be_equal(decorated)
       end
     end
   end
 
   context 'decorated' do
-    describe '#decorate' do
+    describe '#_decorum_decorate' do
       it 'returns self on decoration' do
         real_decorated = decorated
-        expect(decorated.decorate(deco_class_1)).to be_equal(real_decorated)
+        expect(decorated._decorum_decorate(deco_class_1)).to be_equal(real_decorated)
       end
 
       it 'calls #post_decorate' do
-        expect(decorated.decorate(deco_class_1).post_decorated).to eq("decorated")
+        expect(decorated._decorum_decorate(deco_class_1).post_decorated).to eq("decorated")
       end
       
       it 'yields decorator if block_given?' do
         decorator = nil
-        decorated.decorate(deco_class_1) { |dec| decorator = dec }
-        actual_decorator = decorated.instance_variable_get(:@_decorator_chain)
-        expect(decorator.instance_variable_get(:@_decorator)).to be(actual_decorator)
+        decorated._decorum_decorate(deco_class_1) { |dec| decorator = dec }
+        actual_decorator = decorated.instance_variable_get(:@_decorum_chain_reference)
+        expect(decorator._actual_decorator).to be(actual_decorator)
       end
        
       context 'success' do 
         before(:each) do
           decorator_options = { decorator_handle: "first", shared_attribute: "shared 1", local_attribute: "local 1" }
-          decorated.decorate(deco_class_1, decorator_options)
+          decorated._decorum_decorate(deco_class_1, decorator_options)
         end
 
-        describe '#is_decorated?' do
+        describe '#_decorum_is_decorated?' do
           it 'returns true' do
-            expect(decorated.is_decorated?).to be true
+            expect(decorated._decorum_is_decorated?).to be true
           end
           
           it 'returns false after unloading' do
-            decorated.undecorate(decorated.decorators.first)
-            expect(decorated.is_decorated?).to be false
+            decorated._decorum_undecorate(decorated._decorum_decorators.first)
+            expect(decorated._decorum_is_decorated?).to be false
           end
         end
             
@@ -142,7 +142,7 @@ describe Decorum::Decorations do
         end
 
         it 'sets internal state' do
-          internal_state = decorated.instance_variable_get(:@_decorator_chain)
+          internal_state = decorated.instance_variable_get(:@_decorum_chain_reference)
           expect(internal_state.is_a?(deco_class_1)).to be true
         end
 
@@ -155,7 +155,7 @@ describe Decorum::Decorations do
         end
 
         it 'raises NoMethodError on nonexistent method' do
-          expect { decorated.nonexistent_method }.to raise_error(NoMethodError)
+          expect { decorated.this_method_absolutely_doesnt_exist }.to raise_error(NoMethodError)
         end
         
         it 'is decorated by local attributes' do
@@ -167,14 +167,14 @@ describe Decorum::Decorations do
         end
 
         it 'creates decorated state for decorator class' do
-          expect(decorated.decorated_state(deco_class_1).shared_attribute).to eq('shared 1')
+          expect(decorated._decorum_decorated_state(deco_class_1).shared_attribute).to eq('shared 1')
         end
       
         context 'with multiple decorators' do
           before(:each) do
             3.times do |i|
               klass = send(:"deco_class_#{i + 1}")
-              decorated.decorate(klass)
+              decorated._decorum_decorate(klass)
             end
           end
 
@@ -193,21 +193,21 @@ describe Decorum::Decorations do
 
       context 'failure' do
         it 'rejects classes that are not Decorators' do
-          expect { decorated.decorate(Class,{}) }.to raise_error(TypeError)
+          expect { decorated._decorum_decorate(Class, {}) }.to raise_error(TypeError)
         end
 
         it 'rejects non unique decorator handles' do
           3.times do |i|
             klass = send(:"deco_class_#{i + 1}")
-            decorated.decorate(klass, decorator_handle: "deco-#{i + 1}")
+            decorated._decorum_decorate(klass, decorator_handle: "deco-#{i + 1}")
           end
-          expect { decorated.decorate(deco_class_1, decorator_handle: "deco-2") }.to raise_error(RuntimeError)
+          expect { decorated._decorum_decorate(deco_class_1, decorator_handle: "deco-2") }.to raise_error(RuntimeError)
         end
       end
     end
     
     describe '#respond_to?' do
-      before(:each) { decorated.decorate(deco_class_1) }
+      before(:each) { decorated._decorum_decorate(deco_class_1) }
 
       it 'returns true for decorated methods' do  
         expect(decorated.respond_to?(:first_decorator_method)).to be true
@@ -218,7 +218,7 @@ describe Decorum::Decorations do
       end
 
       it 'returns false for undefined method' do
-        expect(decorated.respond_to?(:nonexistent_method)).to be false
+        expect(decorated.respond_to?(:this_method_absolutely_doesnt_exist)).to be false
       end
     end
 
@@ -226,31 +226,31 @@ describe Decorum::Decorations do
       before(:each) do
         3.times do |x|
           klass = send(:"deco_class_#{x + 1}")
-          decorated.decorate(klass, decorator_handle: "deco-#{x + 1}")
+          decorated._decorum_decorate(klass, decorator_handle: "deco-#{x + 1}")
         end
       end
 
-      describe '#decorators' do
+      describe '#_decorum_decorators' do
         it 'accurately reflects loaded decorators and in order' do
           expected_map = ["deco-3", "deco-2", "deco-1"]
-          expect(decorated.decorators.map { |d| d.decorator_handle }).to eq(expected_map)
+          expect(decorated._decorum_decorators.map { |d| d.decorator_handle }).to eq(expected_map)
         end
 
         it 'memoizes decorators' do
-          decorated.decorators[0].next_link = decorated.decorators[2]
-          expect(decorated.decorators.length).to be(3)
+          decorated._decorum_decorators[0].next_link = decorated._decorum_decorators[2]
+          expect(decorated._decorum_decorators.length).to be(3)
         end
 
-        it 'refreshes via #decorators!' do
-          decorated._decorators[0].next_link = decorated._decorators[2]
-          decorated.send(:_decorators!)
-          expect(decorated.decorators.length).to be(2)
+        it 'refreshes via #_decorum_raw_decorators!' do
+          decorated._decorum_raw_decorators[0].next_link = decorated._decorum_raw_decorators[2]
+          decorated.send(:_decorum_raw_decorators!)
+          expect(decorated._decorum_decorators.length).to be(2)
         end
       end
 
-      describe '#undecorate' do 
+      describe '#_decorum_undecorate' do 
         before(:each) do
-          @undec = decorated.decorators.detect { |d| d.decorator_handle == "deco-2" }
+          @undec = decorated._decorum_decorators.detect { |d| d.decorator_handle == "deco-2" }
           # just to make sure...
           unless @undec.is_a?(Decorum::CallableDecorator)
             raise "broken test---no such decorator deco-2; undec was #{@undec.inspect}"
@@ -258,23 +258,23 @@ describe Decorum::Decorations do
         end
 
         it 'undecorates' do
-          decorated.undecorate(@undec)
-          expect(decorated.decorators.length).to be(2)
+          decorated._decorum_undecorate(@undec)
+          expect(decorated._decorum_decorators.length).to be(2)
         end
 
         it 'undecorates the right one' do
-          decorated.undecorate(@undec)
+          decorated._decorum_undecorate(@undec)
           expected_map = ["deco-3", "deco-1"]
-          expect(decorated.decorators.map { |d| d.decorator_handle }).to eq(expected_map)
+          expect(decorated._decorum_decorators.map { |d| d.decorator_handle }).to eq(expected_map)
         end
 
         it 'returns self on success' do
           real_decorated = decorated
-          expect(decorated.undecorate(@undec)).to be_equal(real_decorated)
+          expect(decorated._decorum_undecorate(@undec)).to be_equal(real_decorated)
         end
         
         context 'once undecorated' do
-          before(:each) { decorated.undecorate(@undec) }
+          before(:each) { decorated._decorum_undecorate(@undec) }
 
           it 'no longer responds to removed decorated method' do
             expect(decorated.respond_to?(:second_decorator_method)).to be false
@@ -289,11 +289,11 @@ describe Decorum::Decorations do
           end
 
           it 'destroys shared state when last class member is gone' do
-            expect(decorated.decorated_state(deco_class_2)).to be_nil
+            expect(decorated._decorum_decorated_state(deco_class_2)).to be_nil
           end
 
           it 'does not destroy other shared state' do
-            expect(decorated.decorated_state(deco_class_1)).to be_a(Decorum::DecoratedState)
+            expect(decorated._decorum_decorated_state(deco_class_1)).to be_a(Decorum::DecoratedState)
           end
         end 
       end

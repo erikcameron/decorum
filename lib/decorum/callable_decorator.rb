@@ -3,6 +3,11 @@ module Decorum
     def initialize(decorator)
       @_decorator = decorator
     end
+
+    # tortuously named to avoid conflict and discourage use
+    def _actual_decorator
+      @_decorator
+    end
     
     def method_missing(message, *args, &block)
       response = catch :chain_stop do

@@ -4,9 +4,9 @@ describe "when Bob is ordering a cup of coffee" do
   let(:coffee) { Decorum::Examples::Coffee.new }
 
   before(:each) do
-    coffee.decorate(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
-    coffee.decorate(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
-    coffee.decorate(Decorum::Examples::SugarDecorator)
+    coffee._decorum_decorate(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
+    coffee._decorum_decorate(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
+    coffee._decorum_decorate(Decorum::Examples::SugarDecorator)
     coffee.add_milk
     coffee.add_sugar
   end
@@ -22,7 +22,7 @@ describe "when Bob is ordering a cup of coffee" do
   context "things get interesting" do
     before(:each) do 
       ["bear", "man", "pig"].each do |critter|
-        coffee.decorate(Decorum::Examples::MilkDecorator, animal: critter)
+        coffee._decorum_decorate(Decorum::Examples::MilkDecorator, animal: critter)
       end
       coffee.add_milk 
     end

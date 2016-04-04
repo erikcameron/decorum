@@ -30,8 +30,7 @@ module Decorum
   
     # public instance methods
 
-
-    def decorate(klass, options={})
+    def _decorum_decorate(klass, options={})
       if namespace_method = options.delete(:namespace)
         decorator = nil
         namespace = nil
@@ -40,128 +39,131 @@ module Decorum
           unless namespace.is_a?(Decorum::DecoratorNamespace)
             raise RuntimeError, "#{namespace_method} exists and is not a decorator namespace"
           end
-          namespace.decorate(klass, options) { |d| decorator = d }
+          namespace._decorum_decorate(klass, options) { |d| decorator = d }
         else
           namespace   = Decorum::DecoratorNamespace.new(self)
-          namespace.decorate(klass, options) { |d| decorator = d }
-          instance_variable_set(:"@_decorum_#{namespace_method}", namespace)
+          namespace._decorum_decorate(klass, options) { |d| decorator = d }
+          instance_variable_set(:"@_decorum_ns_#{namespace_method}", namespace)
           m = Module.new do
             define_method(namespace_method) do
-              instance_variable_get(:"@_decorum_#{namespace_method}")
+              instance_variable_get(:"@_decorum_ns_#{namespace_method}")
             end
           end
           extend m
-          _decorator_namespaces << namespace_method
+          _decorum_namespaces << namespace_method
         end
-        yield CallableDecorator.new(decorator) if block_given?
+        yield Decorum::CallableDecorator.new(decorator) if block_given?
       else
         extend Decorum::Decorations::Intercept
-        decorator = add_to_decorator_chain(klass, options)
-        yield CallableDecorator.new(decorator) if block_given?
+        decorator = _add_to_decorum_chain(klass, options)
+        yield Decorum::CallableDecorator.new(decorator) if block_given?
         decorator.post_decorate
       end 
       self
     end
 
-    def undecorate(target)
-      remove_from_decorator_chain(target)
+    def _decorum_undecorate(target)
+      _remove_from_decorum_chain(target)
       self
     end
     
-    def is_decorated?
-      ![ decorators, _decorator_namespaces.map { |ns| send(ns).decorators } ].flatten.empty?
+    def _decorum_is_decorated?
+      ![ _decorum_decorators, _decorum_namespaces.map { |ns| send(ns)._decorum_decorators } ].flatten.empty?
     end
    
     # returns callable decorators---use this
-    def decorators
-      _decorators.map { |d| CallableDecorator.new(d) }
+    def _decorum_decorators
+      _decorum_raw_decorators.map { |d| Decorum::CallableDecorator.new(d) }
     end
 
     # leaving it to you to, say, call this from #initialize
-    def load_decorators_from_class
-      self.class.decorators.each { |decorator_class, options| decorate(decorator_class, options) }
+    def _decorum_load_decorators_from_class
+      self.class.decorators.each { |decorator_class, options| _decorum_decorate(decorator_class, options) }
       self
     end
 
     # returns raw decorators---don't use this unless
     # you know what you're doing
-    def _decorators
-      if @_decorators
-        return @_decorators
-      elsif !@_decorator_chain
+    def _decorum_raw_decorators
+      # the array of raw decorators is memoized; set
+      # @_decorum_raw_decorators to nil/false to rebuild
+      if @_decorum_raw_decorators
+        return @_decorum_raw_decorators
+      elsif !@_decorum_chain_reference
         return []
       end
 
-      decorator = @_decorator_chain
-      @_decorators = []
+      # rebuild the array representation of decorators
+      decorator = @_decorum_chain_reference
+      @_decorum_raw_decorators = []
       until decorator.is_a?(Decorum::ChainStop) 
-        @_decorators << decorator
+        @_decorum_raw_decorators << decorator
         decorator = decorator.next_link
       end
-      @_decorators
+      @_decorum_raw_decorators
     end
 
     # reset the decorator collection
-    def _decorators!
-      @_decorators = nil
-      _decorators
+    def _decorum_raw_decorators!
+      @_decorum_raw_decorators = nil
+      _decorum_raw_decorators
     end
 
-    def decorated_state(klass=nil)
-      @_decorated_state ||= {}
+    def _decorum_decorated_state(klass=nil)
+      @_decorum_decorated_state ||= {}
 
       if klass
-        @_decorated_state[klass]
+        @_decorum_decorated_state[klass]
       else
-        @_decorated_state
+        @_decorum_decorated_state
       end
     end
 
-    def _decorator_namespaces
-      @_decorator_namespaces ||= []
+    def _decorum_namespaces
+      @_decorum_namespaces ||= []
     end
  
     module Decorum::Decorations::Intercept
       def method_missing(message, *args, &block)
         response = catch :chain_stop do
-          @_decorator_chain.send(message, *args, &block)
+          @_decorum_chain_reference.send(message, *args, &block)
         end
         response.is_a?(Decorum::ChainStop) ? super : response
       end
       
       def respond_to_missing?(message, include_private = false)
-        _decorators.each { |d| return true if d.respond_to?(message) }
+        _decorum_raw_decorators.each { |d| return true if d.respond_to?(message) }
         super
       end
     end
 
     private
 
-    def add_to_decorator_chain(klass, options)
+    def _add_to_decorum_chain(klass, options)
       unless klass.ancestors.include?(Decorum::Decorator)
         raise TypeError, "decorator chain needs a Decorator"
       end
 
       if options[:decorator_handle]
-        current_names = _decorators.map { |d| d.decorator_handle.to_sym }.compact
+        current_names = _decorum_raw_decorators.map { |d| d.decorator_handle.to_sym }.compact
         if current_names.include?(options[:decorator_handle].to_sym)
           raise RuntimeError, "decorator names must be unique over an object"
         end
       end
 
-      unless decorated_state(klass)
-        @_decorated_state[klass] = Decorum::DecoratedState.new
+      unless _decorum_decorated_state(klass)
+        @_decorum_decorated_state[klass] = Decorum::DecoratedState.new
       end
 
-      base = @_decorator_chain || Decorum::ChainStop.new
-      @_decorator_chain = klass.new(base, self, options)
+      base = @_decorum_chain_reference || Decorum::ChainStop.new
+      @_decorum_chain_reference = klass.new(base, self, options)
 
       if klass.immediate_methods
         immediate = Module.new do
           klass.immediate_methods.each do |method_name|
             define_method(method_name) do |*args, &block|
               response = catch :chain_stop do
-                @_decorator_chain.send(__method__, *args, &block)
+                @_decorum_chain_reference.send(__method__, *args, &block)
               end
               response.is_a?(Decorum::ChainStop) ? super(*args, &block) : response
             end
@@ -169,30 +171,30 @@ module Decorum
         end
         extend immediate
       end
-      _decorators!
-      @_decorator_chain
+      _decorum_raw_decorators!
+      @_decorum_chain_reference
     end
 
-    def remove_from_decorator_chain(decorator)
-      if decorator.is_a?(CallableDecorator) 
-        decorator = decorator.instance_variable_get(:@_decorator)
+    def _remove_from_decorum_chain(decorator)
+      if decorator.is_a?(Decorum::CallableDecorator) 
+        decorator = decorator._actual_decorator
       end
 
-      unless (decorator.is_a?(Decorum::Decorator) && _decorators.include?(decorator))
+      unless (decorator.is_a?(Decorum::Decorator) && _decorum_raw_decorators.include?(decorator))
         return nil
       end
 
-      if decorator == @_decorator_chain
-        @_decorator_chain = decorator.next_link
+      if decorator == @_decorum_chain_reference
+        @_decorum_chain_reference = decorator.next_link
       else
-        previous_decorator = _decorators[_decorators.index(decorator) - 1]
+        previous_decorator = _decorum_raw_decorators[_decorum_raw_decorators.index(decorator) - 1]
         previous_decorator.next_link = decorator.next_link
       end
       
-      unless _decorators!.map { |d| d.class }.include?(decorator.class)
-        @_decorated_state[decorator.class] = nil
+      unless _decorum_raw_decorators!.map { |d| d.class }.include?(decorator.class)
+        @_decorum_decorated_state[decorator.class] = nil
       end
-      _decorators
+      _decorum_raw_decorators
     end
   end
 end

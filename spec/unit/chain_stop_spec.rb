@@ -5,7 +5,7 @@ describe Decorum::ChainStop do
 
   it 'throws self via :chain_stop on undefined method' do
     response = catch :chain_stop do 
-      chainstop.nonexistent_method
+      chainstop.this_method_absolutely_doesnt_exist
     end
     expect(response).to be_equal(chainstop)
   end

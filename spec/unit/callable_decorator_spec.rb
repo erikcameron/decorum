@@ -4,7 +4,7 @@ describe Decorum::CallableDecorator do
   let(:decorator) do 
     c = Decorum::Examples::Coffee.new
     decorator = nil
-    c.decorate(Decorum::Examples::MilkDecorator) { |d| decorator = d }
+    c._decorum_decorate(Decorum::Examples::MilkDecorator) { |d| decorator = d }
     decorator
   end
 
