@@ -6,33 +6,33 @@ describe Decorum::Decorations do
   let(:deco_class_2) { Decorum::Spec::Decorations::SecondDecorator }
   let(:deco_class_3) { Decorum::Spec::Decorations::ThirdDecorator }
 
-  context 'loading decorators from class defaults' do
+  context 'loading decorators from class defaults via .decorum' do
     let(:klass) do 
       Class.new do
         include Decorum::Decorations
-        decorators Decorum::Spec::Decorations::ClassSpecifiedDecoratorOne, { passed_option: "one" },
+        decorum Decorum::Spec::Decorations::ClassSpecifiedDecoratorOne, { passed_option: "one" },
           Decorum::Spec::Decorations::ClassSpecifiedDecoratorTwo, { passed_option: "two" }
       end
     end
 
-    describe '.decorators' do
+    describe '.decorum' do
       it 'stores decorators in own state correctly' do
-        expect(klass.decorators.map { |d| d[0].ancestors.include?(Decorum::Decorator) }.inject(:&)).to be true
+        expect(klass.decorum.map { |d| d[0].ancestors.include?(Decorum::Decorator) }.inject(:&)).to be true
       end
 
       # the instance method #load_decorators_from_class will insert them in the order given:
       
       it 'normally gives first priority to last listed' do
-        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "one" }, { passed_option: "two" }]).to be true
+        expect(klass.decorum.map { |d| d[1] } == [{ passed_option: "one" }, { passed_option: "two" }]).to be true
       end
 
       it 'reverses order for first-specfied priority' do
         klass.decorators :reverse
-        expect(klass.decorators.map { |d| d[1] } == [{ passed_option: "two" }, { passed_option: "one" }]).to be true
+        expect(klass.decorum.map { |d| d[1] } == [{ passed_option: "two" }, { passed_option: "one" }]).to be true
       end
 
       it 'rejects malformed options' do
-        expect { klass.decorators(Decorum::Spec::Decorations::FirstDecorator, "invalid decorator argument") }.to raise_error
+        expect { klass.decorum(Decorum::Spec::Decorations::FirstDecorator, "invalid decorator argument") }.to raise_error
       end
 
       # this probably belongs with other instance methods below, but we've got the 

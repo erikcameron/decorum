@@ -1,8 +1,8 @@
 module Decorum
   module Decorations
-    def self.included(modyool)
       # class method to declare default decorators
-      def modyool.decorators(*args)
+    module ClassMethods
+      def decorum(*args)
         # set first-listed priority
         if args[0] == :reverse
           return @_decorum_stack_reverse = true
@@ -26,6 +26,11 @@ module Decorum
           @_decorum_stack_reverse ? @_decorum_stack.reverse : @_decorum_stack
         end
       end 
+    end
+
+    # load the class method(s)
+    def self.included(modyool)
+      modyool.extend Decorum::Decorations::ClassMethods
     end
   
     # public instance methods
