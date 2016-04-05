@@ -2,6 +2,8 @@
 [![Gem Version](https://badge.fury.io/rb/decorum.png)](http://badge.fury.io/rb/decorum)
 [![Build Status](https://travis-ci.org/erikcameron/decorum.png?branch=master)](https://travis-ci.org/erikcameron/decorum)
 
+_Note: Travis builds are currently failing for jruby-head and 1.9.3, though I'm not sure it has anything to do with Decorum. I personally just ran the test suite on 1.9.3 and jruby-1.7.6, and everything was fine. Travis builds are working for ruby-head. If you're concerned, just download it and run the test suite for your platform. Will figure this out..._
+
 Decorum implements lightweight decorators
 for Ruby, called "tasteful decorators." (See below.)  It is very small,
 possibly very fast, and has no requirements outside of the standard
