@@ -32,6 +32,9 @@ bp.is_decorated? # ==> true
 bp.shoot_confetti # ==> "boom, yay"
 ```
 
+## 0.5.1
+- Test suite maintenance, all is well.
+
 ## New in 0.5.0
 - The (public) methods in Decorum::Decorations (decorate, undecorate, etc.) may now be aliased. If you were having weird bugs beacuse Decorum was clobbering some existing method named `#decorate`, this is the version for you. More below.
 
