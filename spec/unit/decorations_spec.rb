@@ -32,7 +32,7 @@ describe Decorum::Decorations do
       end
 
       it 'rejects malformed options' do
-        expect { klass.decorum(Decorum::Spec::Decorations::FirstDecorator, "invalid decorator argument") }.to raise_error
+        expect { klass.decorum(Decorum::Spec::Decorations::FirstDecorator, "invalid decorator argument") }.to raise_error(ArgumentError)
       end
 
       # this probably belongs with other instance methods below, but we've got the 
