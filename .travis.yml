@@ -5,4 +5,6 @@ rvm:
   - 1.9.3
   - 2.0.0
 before_install:
-  - gem list -i bundler || gem install bundler
+  # - gem list -i bundler || gem install bundler
+  - gem install bundler
+  - gem update bundler
