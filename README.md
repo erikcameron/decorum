@@ -1,6 +1,6 @@
 # Decorum
 [![Gem Version](https://badge.fury.io/rb/decorum.png)](http://badge.fury.io/rb/decorum)
-[![Build Status](https://travis-ci.org/erikcameron/decorum.png?branch=master)](https://travis-ci.org/erikcameron/decorum)
+[![Build Status](https://travis-ci.org/erikcameron/decorum.png?branch=main)](https://travis-ci.org/erikcameron/decorum)
 
 Decorum implements lightweight decorators for Ruby, which we're
 calling "tasteful decorators." (See below.)  It is very small, and
